@@ -16,4 +16,5 @@ urlpatterns = [
 
     # Badge URLs
     path('badges/', views.BadgeList.as_view(), name='badge-list'),
+    path('badges/<int:pk>/', views.BadgeDetail.as_view()), 
 ]

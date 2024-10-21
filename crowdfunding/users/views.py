@@ -39,6 +39,17 @@ class CustomUserDetail(APIView):
         return Response(serializer.data)
 
 
+    # Adding PUT method
+    def put(self, request, pk):
+        user = self.get_object(pk)
+        serializer = CustomUserSerializer(user, data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(
