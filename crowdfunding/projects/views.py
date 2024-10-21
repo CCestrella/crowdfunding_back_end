@@ -3,33 +3,30 @@ from rest_framework.views import APIView
 from rest_framework import status, permissions
 from django.http import Http404
 from rest_framework.response import Response
-from .models import Project, Pledge
-from .serializers import ProjectSerializer, PledgeSerializer, ProjectDetailSerializer, PledgeDetailSerializer
+from .models import AthleteProfile, Pledge, ProgressUpdate, Badge
+from .serializers import AthleteProfileSerializer, PledgeSerializer, ProgressUpdateSerializer, BadgeSerializer, AthleteProfileDetailSerializer, PledgeDetailSerializer
 from .permissions import IsOwnerOrReadOnly, IsSupporterOrReadOnly
+from projects.models import Pledge, AthleteProfile
 
 
-class ProjectList(APIView):
+
+# AthleteProfile Views
+class AthleteProfileList(APIView): # allows listing all athlete profiles (GET) and creating a new profile (POST), with the current logged-in user being set as the owner.
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        projects = Project.objects.all()
-        serializer = ProjectSerializer(projects, many=True)
+        profiles = AthleteProfile.objects.all()
+        serializer = AthleteProfileSerializer(profiles, many=True)
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = ProjectSerializer(data=request.data)
+        serializer = AthleteProfileSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner=request.user)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            serializer.save(owner=request.user)  # Automatically assigns the logged-in user as owner
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ProjectDetail(APIView):
+class AthleteProfileDetail(APIView): #lows retrieving, updating, and deleting specific athlete profiles (GET, PUT, DELETE).
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
         IsOwnerOrReadOnly
@@ -37,33 +34,36 @@ class ProjectDetail(APIView):
 
     def get_object(self, pk):
         try:
-            project = Project.objects.get(pk=pk)
-            self.check_object_permissions(self.request, project)
-            return project
-        except Project.DoesNotExist:
+            profile = AthleteProfile.objects.get(pk=pk)
+            self.check_object_permissions(self.request, profile)
+            return profile
+        except AthleteProfile.DoesNotExist:
             raise Http404
 
     def get(self, request, pk):
-        project = self.get_object(pk)
-        serializer = ProjectDetailSerializer(project)
+        profile = self.get_object(pk)
+        serializer = AthleteProfileDetailSerializer(profile)
         return Response(serializer.data)
-    
+
     def put(self, request, pk):
-        project = self.get_object(pk)
-        serializer = ProjectDetailSerializer(
-            instance=project,
+        profile = self.get_object(pk)
+        serializer = AthleteProfileDetailSerializer(
+            instance=profile,
             data=request.data,
             partial=True
         )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        profile = self.get_object(pk)
+        profile.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# Pledge Views
 class PledgeList(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
@@ -75,16 +75,9 @@ class PledgeList(APIView):
     def post(self, request):
         serializer = PledgeSerializer(data=request.data)
         if serializer.is_valid():
-            # Corrected to save supporter as the logged-in user, not owner
-            serializer.save(supporter=request.user)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            serializer.save(supporter=request.user)  # Assign the logged-in user as the supporter
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PledgeDetail(APIView):
@@ -103,12 +96,12 @@ class PledgeDetail(APIView):
 
     def get(self, request, pk):
         pledge = self.get_object(pk)
-        serializer = PledgeSerializer(pledge)
+        serializer = PledgeDetailSerializer(pledge)
         return Response(serializer.data)
-    
+
     def put(self, request, pk):
         pledge = self.get_object(pk)
-        serializer = PledgeSerializer(
+        serializer = PledgeDetailSerializer(
             instance=pledge,
             data=request.data,
             partial=True
@@ -116,8 +109,68 @@ class PledgeDetail(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        pledge = self.get_object(pk)
+        pledge.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+# ProgressUpdate Views
+class ProgressUpdateList(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        updates = ProgressUpdate.objects.all()
+        serializer = ProgressUpdateSerializer(updates, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ProgressUpdateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class ProgressUpdateDetail(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_object(self, pk):
+        try:
+            update = ProgressUpdate.objects.get(pk=pk)
+            return update
+        except ProgressUpdate.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        update = self.get_object(pk)
+        serializer = ProgressUpdateSerializer(update)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        update = self.get_object(pk)
+        serializer = ProgressUpdateSerializer(
+            instance=update,
+            data=request.data,
+            partial=True
         )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        update = self.get_object(pk)
+        update.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+# Badge Views
+class BadgeList(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        badges = Badge.objects.all()
+        serializer = BadgeSerializer(badges, many=True)
+        return Response(serializer.data)
