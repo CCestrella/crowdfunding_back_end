@@ -2,7 +2,7 @@
 
 This project showcases the power of community and the spirit of sportsmanship, leveraging the latest web development technologies with Django REST Framework to create a transparent, user-friendly, and engaging crowdfunding experience.!
 
-![Champs Fund Logo](champsfundlogo2.png>)
+![](./Champs Fund Logo-1.png)
 
 ### What is Champs Fund? 🏋️
  A crowdfunding platform dedicated to supporting aspiring young athletes in the Philippines who demonstrate exceptional talent but lack the financial means to participate in national competitions. Our platform will bridge the gap between passionate sports enthusiasts and these promising athletes, providing an avenue to directly contribute to their dreams and ambitions. 
