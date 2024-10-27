@@ -58,7 +58,7 @@ The database schema for Champs Fund represents the data structure used to manage
 ### GET Athletes
 
 The GET request to the /athletes/ endpoint retrieves a list of athletes from the API. In the response, each athlete is represented by an object containing detailed information such as their id, owner (user ID), first_name, last_name, bio, age, sport, funding details like goal and funds_raised, achievements, images, videos, and progress updates. 
-![alt text](image.png)
+![alt text](image-6.png)
 
 ### POST Pledges
 
