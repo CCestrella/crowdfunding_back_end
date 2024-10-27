@@ -3,13 +3,14 @@
 Hi! This is my Django Final Project for She Codes Plus Australia '24-'25!
 
 ![](./Champs Fund Logo.png)
+![alt text](<Champs Fund Logo-1.png>)
 
 ### What is Champs Fund? 🏋️
  A crowdfunding platform dedicated to supporting aspiring young athletes in the Philippines who demonstrate exceptional talent but lack the financial means to participate in national competitions. Our platform will bridge the gap between passionate sports enthusiasts and these promising athletes, providing an avenue to directly contribute to their dreams and ambitions. 
  
  Champs Fund platform specifically focuses on supporting aspiring young athletes between the ages of 5-18 years old, helping them to overcome financial barriers and pursue their potential in sports.
 
-🚀 Visit Champ Fund platform and become a part of this journey: https://champsfund-bdc30eae5ee5.herokuapp.com/admin/
+🚀 Visit Champs Fund platform and become a part of this journey: https://champsfund-bdc30eae5ee5.herokuapp.com/admin/
 
 ### Intended Audience/User Stories
 The intended audience for the "Champs Fund" crowdfunding platform includes:
@@ -49,6 +50,7 @@ The intended audience for the "Champs Fund" crowdfunding platform includes:
 The diagram shows the relationship between CustomUser, Athlete, Pledge, ProgressUpdate, and Badge. Each Athlete is linked to a specific CustomUser through a foreign key, while multiple Pledges can be associated with a single Athlete or User.
 
 ![](./AthleteProfile.png)
+
 
 The database schema for Champs Fund represents the data structure used to manage athletes, pledges, users, progress updates, and badges. It defines how data is stored, related, and retrieved within the platform, enabling efficient tracking of user contributions and athlete progress.”
 
