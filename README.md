@@ -1,8 +1,7 @@
 # 🎖️ Champs Fund 🎖️
 
-Hi! This is my Django Final Project for She Codes Plus Australia '24-'25!
+This project showcases the power of community and the spirit of sportsmanship, leveraging the latest web development technologies with Django REST Framework to create a transparent, user-friendly, and engaging crowdfunding experience.!
 
-![](./Champs Fund Logo.png)
 ![alt text](<Champs Fund Logo-1.png>)
 
 ### What is Champs Fund? 🏋️
@@ -98,6 +97,7 @@ Endpoint: POST /api-token-auth/
 - Copy the token from the response for use in subsequent authenticated requests.
 ![alt text](image-4.png)
 
+
 Step 3: Create a New Project (Athlete Profile)
 Endpoint: POST /athletes/
 
@@ -116,7 +116,5 @@ Authorization: Token YOUR_ACCESS_TOKEN (replace YOUR_ACCESS_TOKEN with the token
 
 ![alt text](image-5.png)
 
-
-This project showcases the power of community and the spirit of sportsmanship, leveraging the latest web development technologies with Django REST Framework to create a transparent, user-friendly, and engaging crowdfunding experience.
 
 # Thank you for exploring Champs Fund! 🎖️ Let’s bring the dreams of young athletes closer to reality, one pledge at a time.
