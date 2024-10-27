@@ -42,4 +42,5 @@ The intended audience for the "Champs Fund" crowdfunding platform includes:
 | /badges/                  | POST        | Creates a new badge.                                 | `{ "name": "string", "description": "string", ... }`     | 201                   | Authentication required     |
 
 ### DB Schema
-![]( {{ ./AthleteProfile.png}})
+### DB Schema
+![](./AthleteProfile.png)
