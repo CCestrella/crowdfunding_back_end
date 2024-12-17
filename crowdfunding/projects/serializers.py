@@ -29,11 +29,11 @@ class PledgeDetailSerializer(PledgeSerializer):
 
 # Athlete Profile Serializer
 class AthleteProfileSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.id')
+    owner = serializers.ReadOnlyField(source='owner.username')  # Read-only field to show the username of the owner
 
     class Meta:
         model = AthleteProfile
-        fields = '__all__'
+        fields = ['id', 'first_name', 'last_name', 'bio', 'age', 'sport', 'goal', 'funds_raised', 'owner']
 
 
 # Athlete Profile Detail Serializer (includes pledges)

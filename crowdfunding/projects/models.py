@@ -10,11 +10,11 @@ class AthleteProfile(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     bio = models.TextField(null=True) 
-    age = models.IntegerField() 
+    age = models.IntegerField(null=False) 
     sport = models.CharField(max_length=150) 
 
     # Funding related details
-    goal = models.DecimalField(max_digits=10, decimal_places=2)  # Financial goal for the athlete
+    goal = models.DecimalField(max_digits=10, decimal_places=2, null=False)  # Financial goal for the athlete
     funds_raised = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Automatically updated as pledges come in
     is_open = models.BooleanField(default=True)  # Is the campaign still accepting funds?
 
@@ -59,41 +59,38 @@ class AthleteProfile(models.Model):
 
 
 class Pledge(models.Model):
-    amount = models.DecimalField(max_digits=10, decimal_places=2) 
-    comment = models.TextField(blank=True)  # An optional comment from the donor (extended length)
-    anonymous = models.BooleanField(default=False)  # Whether the donor wants to stay anonymous
-    is_fulfilled = models.BooleanField(default=True)  # Tracks whether the pledge has been completed
-    
-    # Linking the pledge to an athlete
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    comment = models.TextField(blank=True)
+    anonymous = models.BooleanField(default=False)
+    is_fulfilled = models.BooleanField(default=True)
+
     athlete_profile = models.ForeignKey(
-        'AthleteProfile',  # This links the pledge to a specific athlete
+        'AthleteProfile',
         on_delete=models.CASCADE,
         related_name='pledges'
     )
-    
-    # Linking the pledge to the user (supporter)
+
     supporter = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
         related_name='pledges'
     )
-    
+
     def __str__(self):
         return f"{self.supporter} pledged {self.amount} to {self.athlete_profile}"
-    
+
     def clean(self):
-        # Ensure amount is positive and above a minimum threshold (e.g., $1)
         if self.amount <= 0:
             raise ValidationError({'amount': 'Pledge amount must be greater than zero.'})
         if self.amount < 1:
             raise ValidationError({'amount': 'Pledge amount must be at least $1.'})
         if not self.athlete_profile.is_open:
             raise ValidationError({'athlete_profile': 'Pledging is not allowed on closed campaigns.'})
-        
-        def save(self, *args, **kwargs):
+
+    def save(self, *args, **kwargs):
         # Call clean to validate the model before saving
-            self.clean()
-            super(Pledge, self).save(*args, **kwargs)
+        self.clean()
+        super(Pledge, self).save(*args, **kwargs)
 
         # Update the athlete's funds raised
         self.athlete_profile.funds_raised += self.amount
@@ -103,32 +100,25 @@ class Pledge(models.Model):
         self.check_for_badges()
 
     def check_for_badges(self):
-        # Calculate the user's total donations
         total_pledged = Pledge.objects.filter(supporter=self.supporter).aggregate(models.Sum('amount'))['amount__sum']
-
-        # Fetch the "Top Donor" badge (assuming it exists in the database)
         try:
             top_donor_badge = Badge.objects.get(name="Top Donor")
         except Badge.DoesNotExist:
             return
 
-        # Award the "Top Donor" badge if the total pledges exceed $100
         if total_pledged >= 100:
             top_donor_badge.award_badge(self.supporter)
-
-        # Also check for the "First Donor" badge
         self.check_for_first_donor_badge()
 
     def check_for_first_donor_badge(self):
-        # Check if this pledge is the first one for the athlete
         if Pledge.objects.filter(athlete_profile=self.athlete_profile).count() == 1:
             try:
                 first_donor_badge = Badge.objects.get(name="First Donor")
             except Badge.DoesNotExist:
                 return
 
-            # Award the "First Donor" badge to the supporter
             first_donor_badge.award_badge(self.supporter)
+
 
 
 

@@ -9,10 +9,25 @@ from .permissions import IsOwnerOrReadOnly, IsSupporterOrReadOnly
 from projects.models import Pledge, AthleteProfile
 
 
+class AthleteProfileCreate(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        print(f"User making the request: {request.user}")
+        data = request.data
+        data['owner'] = request.user.id  # Automatically assign the logged-in user as the owner
+        serializer = AthleteProfileSerializer(data=data)
+        
+        if serializer.is_valid():
+            serializer.save(owner=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # AthleteProfile Views
-class AthleteProfileList(APIView): # allows listing all athlete profiles (GET) and creating a new profile (POST), with the current logged-in user being set as the owner.
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+class AthleteProfileList(APIView):
+    authentication_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can create
 
     def get(self, request):
         profiles = AthleteProfile.objects.all()
@@ -20,11 +35,16 @@ class AthleteProfileList(APIView): # allows listing all athlete profiles (GET) a
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = AthleteProfileSerializer(data=request.data)
+        # Automatically set the owner to the logged-in user
+        data = request.data
+        data['owner'] = request.user.id  # Assign the user ID to the 'owner' field
+
+        serializer = AthleteProfileSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(owner=request.user)  # Automatically assigns the logged-in user as owner
+            serializer.save(owner=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AthleteProfileDetail(APIView): #lows retrieving, updating, and deleting specific athlete profiles (GET, PUT, DELETE).
     permission_classes = [
