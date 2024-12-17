@@ -7,7 +7,7 @@ from .models import AthleteProfile, Pledge, ProgressUpdate, Badge
 from .serializers import AthleteProfileSerializer, PledgeSerializer, ProgressUpdateSerializer, BadgeSerializer, AthleteProfileDetailSerializer, PledgeDetailSerializer
 from .permissions import IsOwnerOrReadOnly, IsSupporterOrReadOnly
 from projects.models import Pledge, AthleteProfile
-
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 
 class AthleteProfileCreate(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -26,8 +26,8 @@ class AthleteProfileCreate(APIView):
 
 # AthleteProfile Views
 class AthleteProfileList(APIView):
-    authentication_classes = [permissions.IsAuthenticated]
-    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can create
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         profiles = AthleteProfile.objects.all()
