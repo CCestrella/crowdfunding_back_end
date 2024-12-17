@@ -87,17 +87,17 @@ class AthleteProfileDetail(APIView): #lows retrieving, updating, and deleting sp
 class PledgeList(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    def get(self, request):
-        pledges = Pledge.objects.all()
-        serializer = PledgeSerializer(pledges, many=True)
-        return Response(serializer.data)
-
     def post(self, request):
-        serializer = PledgeSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(supporter=request.user)  # Assign the logged-in user as the supporter
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            serializer = PledgeSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(supporter=request.user)  # Automatically set the supporter
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"Error: {e}")  # Log the error
+            return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class PledgeDetail(APIView):
