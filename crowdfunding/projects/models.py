@@ -2,8 +2,8 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-  
-
+from django.db import transaction
+from datetime import date
 
 class AthleteProfile(models.Model):
     # Basic athlete information
@@ -65,10 +65,13 @@ class Pledge(models.Model):
     is_fulfilled = models.BooleanField(default=True)
 
     athlete_profile = models.ForeignKey(
-        'AthleteProfile',
-        on_delete=models.CASCADE,
-        related_name='pledges'
-    )
+    'AthleteProfile',
+    on_delete=models.CASCADE,
+    related_name='pledges',
+    # null=True,  # Allow null values
+    # blank=True  # Allow blank values
+)
+
 
     supporter = models.ForeignKey(
         get_user_model(),
@@ -80,24 +83,25 @@ class Pledge(models.Model):
         return f"{self.supporter} pledged {self.amount} to {self.athlete_profile}"
 
     def clean(self):
-        if self.amount <= 0:
-            raise ValidationError({'amount': 'Pledge amount must be greater than zero.'})
-        if self.amount < 1:
-            raise ValidationError({'amount': 'Pledge amount must be at least $1.'})
+        if not self.athlete_profile:
+            raise ValidationError({'athlete_profile': 'An athlete profile is required.'})
         if not self.athlete_profile.is_open:
             raise ValidationError({'athlete_profile': 'Pledging is not allowed on closed campaigns.'})
+        if self.amount <= 0:
+            raise ValidationError({'amount': 'Pledge amount must be greater than zero.'})
+
+
 
     def save(self, *args, **kwargs):
-        # Call clean to validate the model before saving
         self.clean()
-        super(Pledge, self).save(*args, **kwargs)
+        with transaction.atomic():  # Ensure atomic database updates
+            super(Pledge, self).save(*args, **kwargs)
+            if self.athlete_profile:
+                self.athlete_profile.funds_raised += self.amount
+                self.athlete_profile.save()
+        print(f"Updating funds for AthleteProfile {self.athlete_profile.id}")
 
-        # Update the athlete's funds raised
-        self.athlete_profile.funds_raised += self.amount
-        self.athlete_profile.save()
 
-        # Check if the user qualifies for any badges
-        self.check_for_badges()
 
     def check_for_badges(self):
         total_pledged = Pledge.objects.filter(supporter=self.supporter).aggregate(models.Sum('amount'))['amount__sum']
@@ -138,7 +142,8 @@ class ProgressUpdate(models.Model):
 class Badge(models.Model):
     name = models.CharField(max_length=100) 
     description = models.TextField() 
-    image = models.URLField(blank=True)  
+    image = models.URLField(blank=True)
+    date_awarded = models.DateField(null=True, blank=True)  
     
     # Linking badges to users (donors)
     supporters = models.ManyToManyField(
@@ -147,15 +152,15 @@ class Badge(models.Model):
         blank=True
     )
 
-    date_awarded = models.DateTimeField(default=timezone.now)
+    # date_awarded = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
         return self.name
     
     def award_badge(self, user):
-        """Award badge to the user based on specific conditions."""
+    # """Award badge to the user based on specific conditions."""
         if user not in self.supporters.all():
             self.supporters.add(user)
-            self.date_awarded = timezone.now()
+            self.date_awarded = date.today()  # Use only the date part
             self.save()
             print(f"Awarded {self.name} badge to {user}.")

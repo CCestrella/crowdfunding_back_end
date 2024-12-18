@@ -1,22 +1,21 @@
 from rest_framework import serializers
 from .models import AthleteProfile, Pledge, ProgressUpdate, Badge
+from django.core.exceptions import ObjectDoesNotExist
 
 
 # Pledge Serializer
 class PledgeSerializer(serializers.ModelSerializer):
     supporter = serializers.ReadOnlyField(source='supporter.id')
+    athlete_profile = serializers.PrimaryKeyRelatedField(queryset=AthleteProfile.objects.all())
 
     class Meta:
         model = Pledge
         fields = '__all__'
 
-    def update(self, instance, validated_data):
-        instance.amount = validated_data.get('amount', instance.amount)
-        instance.comment = validated_data.get('comment', instance.comment)
-        instance.anonymous = validated_data.get('anonymous', instance.anonymous)
-        instance.is_fulfilled = validated_data.get('is_fulfilled', instance.is_fulfilled)
-        instance.save()
-        return instance
+    def validate_athlete_profile(self, value):
+        if not value.is_open:
+            raise serializers.ValidationError("This campaign is closed for pledging.")
+        return value
 
 
 # Pledge Detail Serializer (for more detailed information)

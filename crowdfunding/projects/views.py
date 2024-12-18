@@ -8,6 +8,7 @@ from .serializers import AthleteProfileSerializer, PledgeSerializer, ProgressUpd
 from .permissions import IsOwnerOrReadOnly, IsSupporterOrReadOnly
 from projects.models import Pledge, AthleteProfile
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from django.core.exceptions import ValidationError
 
 class AthleteProfileCreate(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -89,14 +90,35 @@ class PledgeList(APIView):
 
     def post(self, request):
         try:
+            # Log incoming request data
+            print("Incoming request data:", request.data)
+
+            # Ensure the user is authenticated
+            print("Authenticated user:", request.user)
+
+            # Pass data to the serializer
             serializer = PledgeSerializer(data=request.data)
             if serializer.is_valid():
-                serializer.save(supporter=request.user)  # Automatically set the supporter
+                print("Serializer validated data:", serializer.validated_data)
+                serializer.save(supporter=request.user)
+                print("Pledge successfully saved.")
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            # Log validation errors
+            print("Serializer errors:", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except ValidationError as e:
+            print("Validation Error:", str(e))
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
-            print(f"Error: {e}")  # Log the error
+            print("Unexpected Server Error:", str(e))
+            import traceback
+            traceback.print_exc()  # Print full traceback for debugging
             return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 
 
