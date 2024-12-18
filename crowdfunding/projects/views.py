@@ -4,7 +4,7 @@ from rest_framework import status, permissions
 from django.http import Http404
 from rest_framework.response import Response
 from .models import AthleteProfile, Pledge, ProgressUpdate
-from .serializers import AthleteProfileSerializer, PledgeSerializer, ProgressUpdateSerializer,AthleteProfileDetailSerializer, PledgeDetailSerializer
+from .serializers import AthleteProfileSerializer, PledgeSerializer, ProgressUpdateSerializer, AthleteProfileDetailSerializer, PledgeDetailSerializer
 from .permissions import IsOwnerOrReadOnly, IsSupporterOrReadOnly
 from projects.models import Pledge, AthleteProfile
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
@@ -207,4 +207,3 @@ class ProgressUpdateDetail(APIView):
         update = self.get_object(pk)
         update.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
