@@ -14,8 +14,4 @@ urlpatterns = [
     # Progress Update URLs
     path('updates/', views.ProgressUpdateList.as_view(), name='progress-update-list'),
     path('updates/<int:pk>/', views.ProgressUpdateDetail.as_view(), name='progress-update-detail'),
-
-    # Badge URLs
-    path('badges/', views.BadgeList.as_view(), name='badge-list'),
-    path('badges/<int:pk>/', views.BadgeDetail.as_view(), name='badge-detail'),
 ]

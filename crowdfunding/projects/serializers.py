@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AthleteProfile, Pledge, ProgressUpdate, Badge
+from .models import AthleteProfile, Pledge, ProgressUpdate
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -75,10 +75,3 @@ class ProgressUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-# Badge Serializer
-class BadgeSerializer(serializers.ModelSerializer):
-    supporters = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-
-    class Meta:
-        model = Badge
-        fields = '__all__'

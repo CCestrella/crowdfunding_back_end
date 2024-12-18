@@ -103,27 +103,6 @@ class Pledge(models.Model):
 
 
 
-    def check_for_badges(self):
-        total_pledged = Pledge.objects.filter(supporter=self.supporter).aggregate(models.Sum('amount'))['amount__sum']
-        try:
-            top_donor_badge = Badge.objects.get(name="Top Donor")
-        except Badge.DoesNotExist:
-            return
-
-        if total_pledged >= 100:
-            top_donor_badge.award_badge(self.supporter)
-        self.check_for_first_donor_badge()
-
-    def check_for_first_donor_badge(self):
-        if Pledge.objects.filter(athlete_profile=self.athlete_profile).count() == 1:
-            try:
-                first_donor_badge = Badge.objects.get(name="First Donor")
-            except Badge.DoesNotExist:
-                return
-
-            first_donor_badge.award_badge(self.supporter)
-
-
 
 
 class ProgressUpdate(models.Model):
@@ -138,29 +117,3 @@ class ProgressUpdate(models.Model):
     
     def __str__(self):
         return f"Update: {self.title} for {self.athlete_profile}"
-
-class Badge(models.Model):
-    name = models.CharField(max_length=100) 
-    description = models.TextField() 
-    image = models.URLField(blank=True)
-    date_awarded = models.DateField(null=True, blank=True)  
-    
-    # Linking badges to users (donors)
-    supporters = models.ManyToManyField(
-        get_user_model(),
-        related_name='badges',
-        blank=True
-    )
-
-    # date_awarded = models.DateTimeField(default=timezone.now)
-    
-    def __str__(self):
-        return self.name
-    
-    def award_badge(self, user):
-    # """Award badge to the user based on specific conditions."""
-        if user not in self.supporters.all():
-            self.supporters.add(user)
-            self.date_awarded = date.today()  # Use only the date part
-            self.save()
-            print(f"Awarded {self.name} badge to {user}.")
