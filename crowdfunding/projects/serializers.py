@@ -1,6 +1,20 @@
 from rest_framework import serializers
 from .models import AthleteProfile, Pledge, ProgressUpdate
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
+
+CustomUser = get_user_model()
+
+# User Serializer
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'role']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = CustomUser.objects.create_user(**validated_data)
+        return user
 
 
 # Pledge Serializer
@@ -12,38 +26,45 @@ class PledgeSerializer(serializers.ModelSerializer):
         model = Pledge
         fields = '__all__'
 
-    def validate_athlete_profile(self, value):
-        if not value.is_open:
+    def validate(self, data):
+        # Check that only 'donor' or 'both' roles can make pledges
+        if self.context['request'].user.role not in ['donor', 'both']:
+            raise serializers.ValidationError("You do not have permission to create a pledge.")
+        if not data['athlete_profile'].is_open:
             raise serializers.ValidationError("This campaign is closed for pledging.")
-        return value
+        return data
 
 
-# Pledge Detail Serializer (for more detailed information)
+# Pledge Detail Serializer
 class PledgeDetailSerializer(PledgeSerializer):
     class Meta(PledgeSerializer.Meta):
-        fields = PledgeSerializer.Meta.fields  # Inherit fields from PledgeSerializer
-
-    # No need to nest pledges, as a pledge doesn't contain other pledges.
+        fields = PledgeSerializer.Meta.fields
 
 
 # Athlete Profile Serializer
 class AthleteProfileSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')  # Read-only field to show the username of the owner
+    owner = serializers.ReadOnlyField(source='owner.username')
 
     class Meta:
         model = AthleteProfile
         fields = ['id', 'first_name', 'last_name', 'bio', 'age', 'sport', 'goal', 'funds_raised', 'owner']
 
 
-# Athlete Profile Detail Serializer (includes pledges)
+# Athlete Profile Detail Serializer
 class AthleteProfileDetailSerializer(AthleteProfileSerializer):
-    pledges = PledgeSerializer(many=True, read_only=True)  # Nested pledges
+    pledges = PledgeSerializer(many=True, read_only=True)
 
     class Meta:
         model = AthleteProfile
         fields = '__all__'
 
     def update(self, instance, validated_data):
+        # Check if the user role is 'athlete' or 'both'
+        request = self.context['request']
+        if request.user.role not in ['athlete', 'both']:
+            raise serializers.ValidationError("You do not have permission to edit this profile.")
+
+        # Update fields only if the user is allowed
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.bio = validated_data.get('bio', instance.bio)
@@ -73,5 +94,3 @@ class ProgressUpdateSerializer(serializers.ModelSerializer):
         instance.date_posted = validated_data.get('date_posted', instance.date_posted)
         instance.save()
         return instance
-
-

@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db import transaction
 from datetime import date
+from django.contrib.auth.models import AbstractUser
 
 class AthleteProfile(models.Model):
     # Basic athlete information
@@ -102,9 +103,6 @@ class Pledge(models.Model):
         print(f"Updating funds for AthleteProfile {self.athlete_profile.id}")
 
 
-
-
-
 class ProgressUpdate(models.Model):
     athlete_profile = models.ForeignKey(
         'AthleteProfile',  # Links the update to the athlete
@@ -117,3 +115,34 @@ class ProgressUpdate(models.Model):
     
     def __str__(self):
         return f"Update: {self.title} for {self.athlete_profile}"
+
+
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.db import models
+
+class CustomUser(AbstractUser):
+    ROLE_CHOICES = [
+        ('athlete', 'Athlete'),
+        ('donor', 'Donor'),
+        ('both', 'Both'),
+    ]
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='donor')
+
+    # Customizing groups and user_permissions with unique related_name
+    groups = models.ManyToManyField(
+        Group,
+        related_name="customuser_groups",  # Unique related_name
+        blank=True,
+        help_text="The groups this user belongs to.",
+        verbose_name="groups",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="customuser_user_permissions",  # Unique related_name
+        blank=True,
+        help_text="Specific permissions for this user.",
+        verbose_name="user permissions",
+    )
+
+    def __str__(self):
+        return self.username
