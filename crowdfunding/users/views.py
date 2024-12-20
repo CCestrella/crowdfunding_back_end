@@ -6,6 +6,11 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from .models import CustomUser
 from .serializers import CustomUserSerializer
+from django.shortcuts import render
+from django.contrib.auth import get_user_model
+from rest_framework import generics
+
+User = get_user_model()
 
 class CustomUserList(APIView):
     def get(self, request):
@@ -65,3 +70,10 @@ class CustomAuthToken(ObtainAuthToken):
             'user_id': user.id,
             'email': user.email
         })
+
+class SignUpView(generics.CreateAPIView):
+    """
+    API view for user sign-up.
+    """
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer

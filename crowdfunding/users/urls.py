@@ -1,7 +1,9 @@
 from django.urls import path
-from . import views
+from .views import SignUpView, CustomUserList, CustomUserDetail
 
 urlpatterns = [
-    path('athletes/', views.CustomUserList.as_view()),
-    path('athletes/<int:pk>/', views.CustomUserDetail.as_view()),
+    # User-related endpoints
+    path('', SignUpView.as_view(), name='user-sign-up'),  # Now accessible at /users/
+    path('athletes/', CustomUserList.as_view(), name='custom-user-list'),
+    path('athletes/<int:pk>/', CustomUserDetail.as_view(), name='custom-user-detail'),
 ]

@@ -3,9 +3,9 @@ from . import views
 
 urlpatterns = [
     # Athlete Profile URLs
-    path('athletes/', views.AthleteProfileList.as_view(), name='athlete-profile-list'),  # List athletes
-    path('athlete/new/', views.AthleteProfileCreate.as_view(), name='athlete-profile-create'),  # Create a new athlete
-    path('athletes/<int:pk>/', views.AthleteProfileDetail.as_view(), name='athlete-profile-detail'),  # Specific athlete details
+    path('athletes/', views.AthleteProfileList.as_view(), name='athlete-profile-list'),
+    path('athlete/new/', views.AthleteProfileCreate.as_view(), name='athlete-profile-create'),
+    path('athletes/<int:pk>/', views.AthleteProfileDetail.as_view(), name='athlete-profile-detail'),
 
     # Pledge URLs
     path('pledges/', views.PledgeList.as_view(), name='pledge-list'),

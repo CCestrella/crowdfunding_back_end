@@ -6,15 +6,39 @@ from django.core.exceptions import ObjectDoesNotExist
 CustomUser = get_user_model()
 
 # User Serializer
+# User Serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'role']
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {
+            'password': {'write_only': True},  # Password should not be readable in responses
+        }
+
+    def validate(self, data):
+        """
+        Validate the incoming payload to ensure all required fields are valid.
+        """
+        required_fields = ['username', 'password', 'first_name', 'last_name', 'email', 'role']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                raise serializers.ValidationError({field: f'{field} is required.'})
+
+        # Validate role field to ensure it matches allowed roles
+        allowed_roles = ['athlete', 'donor', 'both']
+        if data.get('role') not in allowed_roles:
+            raise serializers.ValidationError({'role': f"Role must be one of {', '.join(allowed_roles)}."})
+
+        return data
 
     def create(self, validated_data):
+        """
+        Create a new user using the validated payload.
+        """
+        # Use create_user to ensure password hashing
         user = CustomUser.objects.create_user(**validated_data)
         return user
+
 
 
 # Pledge Serializer
