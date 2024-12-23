@@ -6,6 +6,7 @@ urlpatterns = [
     path('athletes/', views.AthleteProfileList.as_view(), name='athlete-profile-list'),
     path('athlete/new/', views.AthleteProfileCreate.as_view(), name='athlete-profile-create'),
     path('athletes/<int:pk>/', views.AthleteProfileDetail.as_view(), name='athlete-profile-detail'),
+    path('my-athletes/', views.UserAthletesList.as_view(), name='user-athletes-list'),  # Ensure the correct view is defined in views.py
 
     # Pledge URLs
     path('pledges/', views.PledgeList.as_view(), name='pledge-list'),

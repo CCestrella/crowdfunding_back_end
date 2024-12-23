@@ -91,6 +91,28 @@ class AthleteProfileList(APIView):
         serializer = AthleteProfileSerializer(athletes, many=True)
         return Response(serializer.data)
 
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+class UserAthletesList(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            print(f"Authenticated user: {request.user}")  # Log user details
+            print(f"Authorization header: {request.headers.get('Authorization')}")  # Log token header
+            
+            athletes = AthleteProfile.objects.filter(owner=request.user)
+            if not athletes.exists():
+                return Response({"detail": "No athletes found for this user."}, status=404)
+
+            serializer = AthleteProfileSerializer(athletes, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            print(f"Error in UserAthletesList: {e}")
+            return Response({"error": "An internal error occurred."}, status=500)
+
 
 # Pledge Views
 class PledgeList(APIView):
