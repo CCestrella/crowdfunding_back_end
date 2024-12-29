@@ -68,7 +68,8 @@ class CustomAuthToken(ObtainAuthToken):
         return Response({
             'token': token.key,
             'user_id': user.id,
-            'email': user.email
+            'email': user.email,
+            'first_name': user.first_name
         })
 
 class SignUpView(generics.CreateAPIView):
