@@ -11,7 +11,7 @@ urlpatterns = [
         path('my-athletes/', views.UserAthletesList.as_view(), name='user-athletes-list'),
 
         # Pledge URLs
-        path('pledges/', views.PledgeList.as_view(), name='pledge-list'),
+        path('api/pledges/', views.PledgeList.as_view(), name='pledge-list'),
         path('pledges/<int:pk>/', views.PledgeDetail.as_view(), name='pledge-detail'),
 
         # Progress Update URLs

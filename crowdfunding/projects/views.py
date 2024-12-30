@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from django.http import Http404
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from .models import AthleteProfile, Pledge, ProgressUpdate
@@ -7,7 +8,6 @@ from .serializers import (
     PledgeSerializer,
     ProgressUpdateSerializer,
     AthleteProfileDetailSerializer,
-    PledgeDetailSerializer,
     ProgressUpdateSerializer,
     UserSerializer
 )
@@ -15,6 +15,8 @@ from .permissions import IsOwnerOrReadOnly, IsSupporterOrReadOnly
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from django.core.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 # Sign-Up View
 class SignUpView(APIView):
@@ -50,68 +52,58 @@ class AthleteProfileCreate(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AthleteProfileDetail(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+# class AthleteProfileDetail(APIView):
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
-    def get_object(self, pk):
-        try:
-            profile = AthleteProfile.objects.get(pk=pk)
-            self.check_object_permissions(self.request, profile)
-            return profile
-        except AthleteProfile.DoesNotExist:
-            raise Http404
+#     def get_object(self, pk):
+#         try:
+#             profile = AthleteProfile.objects.get(pk=pk)
+#             self.check_object_permissions(self.request, profile)
+#             return profile
+#         except AthleteProfile.DoesNotExist:
+#             raise Http404
 
-    def get(self, request, pk):
-        profile = self.get_object(pk)
-        serializer = AthleteProfileDetailSerializer(profile, context={'request': request})
-        return Response(serializer.data)
+#     def get(self, request, pk):
+#         profile = self.get_object(pk)
+#         serializer = AthleteProfileDetailSerializer(profile, context={'request': request})
+#         return Response(serializer.data)
 
-    def put(self, request, pk):
-        profile = self.get_object(pk)
+#     def put(self, request, pk):
+#         profile = self.get_object(pk)
 
-        if request.user.role not in ['athlete', 'both']:
-            return Response({"error": "You do not have permission to edit this profile."},
-                            status=status.HTTP_403_FORBIDDEN)
+#         if request.user.role not in ['athlete', 'both']:
+#             return Response({"error": "You do not have permission to edit this profile."},
+#                             status=status.HTTP_403_FORBIDDEN)
 
-        serializer = AthleteProfileDetailSerializer(
-            instance=profile,
-            data=request.data,
-            partial=True,
-            context={'request': request}
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         serializer = AthleteProfileDetailSerializer(
+#             instance=profile,
+#             data=request.data,
+#             partial=True,
+#             context={'request': request}
+#         )
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AthleteProfileList(APIView):
     def get(self, request):
         athletes = AthleteProfile.objects.all()
-        serializer = AthleteProfileSerializer(athletes, many=True)
+        serializer = AthleteProfileDetailSerializer(athletes, many=True)
         return Response(serializer.data)
 
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+
+
 
 class UserAthletesList(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        try:
-            print(f"Authenticated user: {request.user}")  # Log user details
-            print(f"Authorization header: {request.headers.get('Authorization')}")  # Log token header
-            
-            athletes = AthleteProfile.objects.filter(owner=request.user)
-            if not athletes.exists():
-                return Response({"detail": "No athletes found for this user."}, status=404)
-
-            serializer = AthleteProfileSerializer(athletes, many=True)
-            return Response(serializer.data, status=200)
-        except Exception as e:
-            print(f"Error in UserAthletesList: {e}")
-            return Response({"error": "An internal error occurred."}, status=500)
+        athletes = AthleteProfile.objects.filter(owner=request.user)
+        serializer = AthleteProfileDetailSerializer(athletes, many=True)
+        return Response(serializer.data)
 
 
 # Pledge Views
@@ -141,16 +133,16 @@ class PledgeDetail(APIView):
             self.check_object_permissions(self.request, pledge)
             return pledge
         except Pledge.DoesNotExist:
-            raise Http404
+                raise Http404
 
     def get(self, request, pk):
         pledge = self.get_object(pk)
-        serializer = PledgeDetailSerializer(pledge, context={'request': request})
+        serializer = PledgeSerializer(pledge, context={'request': request})
         return Response(serializer.data)
 
     def put(self, request, pk):
         pledge = self.get_object(pk)
-        serializer = PledgeDetailSerializer(
+        serializer = PledgeSerializer(
             instance=pledge,
             data=request.data,
             partial=True,
@@ -180,9 +172,39 @@ class ProgressUpdateDetail(APIView):
         try:
             return ProgressUpdate.objects.get(pk=pk)
         except ProgressUpdate.DoesNotExist:
-            raise Http404
+                raise Http404
 
     def get(self, request, pk):
         update = self.get_object(pk)
         serializer = ProgressUpdateSerializer(update)
         return Response(serializer.data)
+
+class AthleteProfileDetail(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+    def get_object(self, pk):
+        try:
+            profile = AthleteProfile.objects.get(pk=pk)
+            self.check_object_permissions(self.request, profile)
+            return profile
+        except AthleteProfile.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        profile = self.get_object(pk)
+        serializer = AthleteProfileDetailSerializer(profile, context={'request': request})
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        profile = self.get_object(pk)
+        serializer = AthleteProfileDetailSerializer(
+            instance=profile,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+        if serializer.is_valid():
+            updated_profile = serializer.save()
+            return Response(AthleteProfileDetailSerializer(updated_profile).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

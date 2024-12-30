@@ -54,9 +54,9 @@ class AthleteProfile(models.Model):
             raise ValidationError({'age': 'Age must be between 5 and 18.'})
 
     def save(self, *args, **kwargs):
-        # Call the clean method to validate before saving
-        self.clean()
+        print(f"Saving AthleteProfile: {self.first_name} {self.last_name}, Progress Updates: {self.progress_updates}")
         super(AthleteProfile, self).save(*args, **kwargs)
+
 
 
 class Pledge(models.Model):
