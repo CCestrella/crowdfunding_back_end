@@ -13,6 +13,7 @@ from .serializers import (
     UserSerializer,
 )
 from .permissions import IsOwnerOrReadOnly, IsSupporterOrReadOnly
+from django.db import transaction
 
 
 # Sign-Up View
@@ -114,20 +115,40 @@ class AthleteProfileDetail(APIView):
 # Pledge Views
 class PledgeList(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request):
+        pledges = Pledge.objects.all()
+        serializer = PledgeSerializer(pledges, many=True)
+        return Response(serializer.data)
 
     def post(self, request):
-        if request.user.role not in ['donor', 'both']:
+        athlete_profile_id = request.data.get('athlete_profile')
+        if not athlete_profile_id:
             return Response(
-                {"error": "You do not have permission to make pledges."},
-                status=status.HTTP_403_FORBIDDEN,
+                {"error": "Athlete profile is required."}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
-
-        serializer = PledgeSerializer(data=request.data, context={'request': request})
-
-        if serializer.is_valid():
-            serializer.save(supporter=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            athlete_profile = AthleteProfile.objects.get(id=athlete_profile_id)
+            serializer = PledgeSerializer(data=request.data, context={'request': request})
+            
+            if serializer.is_valid():
+                try:
+                    with transaction.atomic():
+                        pledge = serializer.save(supporter=request.user)
+                        athlete_profile.funds_raised += pledge.amount
+                        athlete_profile.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                except ValidationError as e:
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except AthleteProfile.DoesNotExist:
+            return Response(
+                {"error": "Athlete profile not found."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class PledgeDetail(APIView):

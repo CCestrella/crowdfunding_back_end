@@ -9,10 +9,10 @@ urlpatterns = [
         path('athlete/new/', views.AthleteProfileCreate.as_view(), name='athlete-profile-create'),
         path('athletes/<int:pk>/', views.AthleteProfileDetail.as_view(), name='athlete-profile-detail'),
         path('my-athletes/', views.UserAthletesList.as_view(), name='user-athletes-list'),
-        path('api/my-athletes/<int:pk>/', views.UserAthleteDetail.as_view(), name='user-athlete-detail'),
+        path('my-athletes/<int:pk>/', views.UserAthleteDetail.as_view(), name='user-athlete-detail'),
 
         # Pledge URLs
-        path('api/pledges/', views.PledgeList.as_view(), name='pledge-list'),
+        path('pledges/', views.PledgeList.as_view(), name='pledge-list'),
         path('pledges/<int:pk>/', views.PledgeDetail.as_view(), name='pledge-detail'),
 
         # Progress Update URLs
