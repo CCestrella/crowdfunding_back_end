@@ -39,10 +39,18 @@ class PledgeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, data):
+        # Check if the user's role is allowed to create a pledge
         if self.context['request'].user.role not in ['donor', 'both']:
-            raise serializers.ValidationError("You do not have permission to create a pledge.")
+            raise serializers.ValidationError(
+                "Please log in as a donor to make a pledge."
+            )
+        
+        # Check if the campaign is still open
         if not data['athlete_profile'].is_open:
-            raise serializers.ValidationError("This campaign is closed for pledging.")
+            raise serializers.ValidationError(
+                "Sorry, this campaign is no longer accepting donations."
+            )
+        
         return data
 
 
